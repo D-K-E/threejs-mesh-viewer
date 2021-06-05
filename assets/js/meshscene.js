@@ -14,14 +14,15 @@ import {
 } from "./widget.js";
 
 
-class CubeScene {
-    constructor(render_zone_id = "render-zone") {
+class MeshScene {
+    constructor(render_zone_id = "render-zone", mesh_url = null) {
         this._render_zone = document.getElementById(render_zone_id);
         this._width = this.render_zone.width;
         this._height = this.render_zone.height;
         this._camera = null;
         this._scene = null;
         this._renderer = null;
+        this._mesh_url = mesh_url;
 
 
         this._camera_controller = null;
@@ -41,7 +42,7 @@ class CubeScene {
         this._textured_material = null;
         this._reflective_material = null;
 
-        this._cube = null;
+        this._mesh = null;
         this._texture_cube = null;
 
         // allocate these just once
@@ -56,11 +57,11 @@ class CubeScene {
         }
         return obj;
     }
-    get cube() {
-        return this.check_null(this._cube, "scene cube is null");
+    get mesh() {
+        return this.check_null(this._mesh, "scene mesh is null");
     }
-    set cube(s) {
-        this._cube = s;
+    set mesh(s) {
+        this._mesh = s;
     }
     get render_zone() {
         return this.check_null(this._render_zone, "render zone is null");
@@ -137,31 +138,6 @@ class CubeScene {
     set light_helper(s) {
         this._light_helper = s;
     }
-
-    get cube_width() {
-        return this.check_null(this._cube_width,
-            "cube width is null");
-    }
-    set cube_width(s) {
-        this._cube_width = s;
-    }
-
-    get cube_height() {
-        return this.check_null(this._cube_height,
-            "cube height is null");
-    }
-    set cube_height(s) {
-        this._cube_height = s;
-    }
-
-    get cube_depth() {
-        return this.check_null(this._cube_depth,
-            "cube depth is null");
-    }
-    set cube_depth(s) {
-        this._cube_depth = s;
-    }
-
     get shading() {
         return this.check_null(this._shading,
             "shading is null");
@@ -255,6 +231,10 @@ class CubeScene {
     set scene(s) {
         this._scene = s;
     }
+
+    get mesh_url() {
+        return this.check_null(this._mesh_url, "mesh url null");
+    }
     get gui() {
         return this.check_null(this._gui, "gui is null");
     }
@@ -323,12 +303,56 @@ class CubeScene {
         this.scene.add(this.ambient_light);
         this.scene.add(this.light);
         this.scene.add(this.light_helper);
+        this.scene.add(this.mesh);
     }
     init_light() {
         this.ambient_light = new THREE.AmbientLight(0x333333); // 0.2
 
         this.light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
         this.light_helper = new THREE.DirectionalLightHelper(this.light, 1);
+    }
+    init_mesh_obj() {
+        const loader = new OBJLoader();
+        const mesh = loader.load(
+            this.mesh_url,
+            (obj) => {
+                this.mesh = obj;
+                this.init_scene();
+                this.render_scene();
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.log('An error happened: ' + error);
+            }
+        );
+    }
+    init_mesh_gltf() {
+        const loader = new GLTFLoader();
+        const mesh = loader.load(
+            this.mesh_url,
+            (gltf) => {
+                this.mesh = gltf.scene;
+                this.init_scene();
+                this.render_scene();
+            },
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+                console.log('An error happened: ' + error);
+            }
+        );
+
+    }
+    init_mesh() {
+        let ext = this.mesh_url.split(".").pop();
+        if (ext === "gltf") {
+            this.init_mesh_gltf();
+        } else if (ext === "obj") {
+            this.init_mesh_obj();
+        }
     }
     init() {
         // set up camera
@@ -345,12 +369,17 @@ class CubeScene {
         this.render_scene = this.render_scene.bind(this);
         this.camera_controller.addEventListener("change", this.render_scene);
 
-        // MATERIALS
-        this.init_materials();
-        // init scene
-        this.init_scene();
         // GUI
         this.setup_gui();
+
+        // MATERIALS
+        this.init_materials();
+
+        // init mesh
+        this.init_mesh();
+
+        // init scene
+        // this.init_scene();
     }
 
     set_effect_controller() {
@@ -375,67 +404,64 @@ class CubeScene {
             lx: 0.32,
             ly: 0.39,
             lz: 0.7,
-            depth: 15,
-            width: 1.0,
-            height: 1.0,
+            scale_x: 1.0,
+            scale_y: 1.0,
+            scale_z: 1.0,
+            rotate_axis_x: 1.0,
+            rotate_axis_y: 1.0,
+            rotate_axis_z: 1.0,
+            rotate_angle: 0,
+            translate_x: 0,
+            translate_y: 0,
+            translate_z: 0,
+            apply_tfn: false,
             newShading: "flat",
             //
-            far: this.camera.model.far,
-            near: this.camera.model.near,
-            fovy: this.camera.model.fov,
-            camera_pos_x: this.camera.model.x,
-            camera_pos_y: this.camera.model.y,
-            camera_pos_z: this.camera.model.z
         };
     }
 
-    create_new_cube() {
-        if (this._cube !== null) {
+    update_mesh() {
+        const should_apply = this.effect_controller.apply_tfn;
+        if (should_apply) {
+            //
+            const s_x = this.effect_controller.scale_x;
+            const s_y = this.effect_controller.scale_y;
+            const s_z = this.effect_controller.scale_z;
+            //
+            const r_x = this.effect_controller.rotate_axis_x;
+            const r_y = this.effect_controller.rotate_axis_y;
+            const r_z = this.effect_controller.rotate_axis_z;
+            //
+            const m_x = this.effect_controller.translate_x;
+            const m_y = this.effect_controller.translate_y;
+            const m_z = this.effect_controller.translate_z;
 
-            this._cube.geometry.dispose();
-            this.scene.remove(this._cube);
-        }
-        const cubeGeometry = new THREE.BoxGeometry(this.cube_width, this.cube_height,
-            this.cube_depth);
-        let mat;
-        if (this.shading === "wireframe") {
-            mat = this.wire_material;
-        } else if (this.shading === "flat") {
-            mat = this.flat_material;
-        } else if (this.shading === "smooth") {
-            mat = this.gouraud_material;
-        } else if (this.shading === "glossy") {
-            mat = this.phong_material;
-        } else if (this.shading === "textured") {
-            mat = this.textured_material;
-        } else {
-            mat = this.reflective_material;
-        }
-        this._cube = new THREE.Mesh(
-            cubeGeometry,
-            mat
-        ); // if no match, pick Phong
+            // rotation angle
+            let rotation_degree = this.effect_controller.rotate_angle;
+            rotation_degree /= (2 * Math.PI);
 
-        this.scene.add(this.cube);
-    }
+            // translate -> rotate -> scale
+            let matrix = new THREE.Matrix4();
 
-    update_cube() {
-        if (this.effect_controller.width !== this.cube_width ||
-            this.effect_controller.height !== this.cube_height ||
-            this.effect_controller.depth !== this.cube_depth ||
-            this.effect_controller.newShading !== this.shading) {
+            //
+            let rotation_vec = new THREE.Vector3(r_x, r_y, r_z);
+            rotation_vec.normalize();
+            //
+            matrix = matrix.makeRotationAxis(rotation_vec, rotation_degree);
+            matrix.setPosition(new THREE.Vector3(m_x, m_y, m_z));
 
-            this.cube_width = this.effect_controller.width;
-            this.cube_height = this.effect_controller.height;
-            this.cube_depth = this.effect_controller.depth;
-            this.shading = this.effect_controller.newShading;
+            // translate -> rotation
+            this.mesh.applyMatrix4(matrix);
 
-            this.create_new_cube();
+            // scale
+            let matrix2 = new THREE.Matrix4();
+            matrix2 = matrix2.makeScale(s_x, s_y, s_z);
+            //
+            this.mesh.applyMatrix4(matrix2);
 
         }
     }
     render_scene() {
-        this.update_cube();
         // this.update_camera();
 
         // We're a bit lazy here. We could check to see if any material attributes changed and update
@@ -476,6 +502,12 @@ class CubeScene {
             this.effect_controller.ly, this.effect_controller.lz);
         this.light.color.setHSL(this.effect_controller.lhue,
             this.effect_controller.lsaturation, this.effect_controller.llightness);
+
+        this.shading = this.effect_controller.newShading;
+
+
+        // update mesh
+        this.update_mesh();
 
         // skybox is rendered separately, so that it is always behind the teapot.
         if (this.shading === "reflective") {
@@ -544,18 +576,45 @@ class CubeScene {
             0.025).name("z").onChange(this.render_scene);
     }
 
-    set_mesh_geometry_control_menu(container) {
+    set_mesh_geometry_control_menu(container, gui) {
         container = this.gui.addFolder("Geometry control");
-        container.add(this.effect_controller, "width", 1.0, 100.0,
-            1.0).name("cube width").onChange(this.render_scene);
-        container.add(this.effect_controller, "height", 1.0, 100.0,
-            1.0).name("cube height").onChange(this.render_scene);
-        container.add(this.effect_controller, "depth", 1.0, 100.0,
-            1.0).name("cube depth").onChange(this.render_scene);
-    }
-    set_camera_control_menu(container) {
+        container.add(this.effect_controller, "scale_x", 0.1, 2.0,
+            0.1).name("scale x");
+        container.add(this.effect_controller, "scale_y", 0.1, 2.0,
+            0.1).name("scale y");
+        container.add(this.effect_controller, "scale_z", 0.1, 2.0,
+            0.1).name("scale z");
 
-        container = this.gui.addFolder("Camera Control");
+        container.add(this.effect_controller, "rotate_axis_x", 0.0, 1.0,
+            0.1).name("rotation axis x");
+
+        container.add(this.effect_controller, "rotate_axis_y", 0.0, 1.0,
+            0.1).name("rotation axis y");
+
+        container.add(this.effect_controller, "rotate_axis_z", 0.0, 1.0,
+            0.1).name("rotation axis z");
+
+        container.add(this.effect_controller, "rotate_angle", 0.0, 360.0,
+            1.0).name("rotation angle");
+
+        container.add(this.effect_controller, "translate_x", -10.0, 10.0,
+            1.0).name("translate x");
+        container.add(this.effect_controller, "translate_y", -10.0, 10.0,
+            1.0).name("translate y");
+        container.add(this.effect_controller, "translate_z", -10, 10.0,
+            1.0).name("translate z");
+        container.add(this.effect_controller, "apply_tfn",
+            false).name("should apply");
+        var obj = {
+            apply: () => {
+                console.log("applied transformation")
+            }
+        }
+        container.add(obj, "apply").name("apply").onChange(this.render_scene);
+    }
+    set_camera_control_menu(container, gui) {
+
+        container = gui.addFolder("Camera Control");
         container.add(this.effect_controller, "far", 1.0, 500.0,
             1.0).name("far plane distance").onChange(this.render_scene);
         container.add(this.effect_controller, "near", 0.001, 0.1,
@@ -574,7 +633,6 @@ class CubeScene {
             -this.effect_controller.far,
             this.effect_controller.far, 1.0).name("cam z").onChange(this.render_scene);
     }
-
     setup_gui() {
         this.set_effect_controller();
 
@@ -610,7 +668,9 @@ class CubeScene {
         this.scene.clear();
         this.gui.destroy();
     }
+
 }
+
 export {
-    CubeScene
+    MeshScene
 };
