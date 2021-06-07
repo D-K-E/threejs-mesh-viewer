@@ -14,6 +14,9 @@ import {
     MeshScene
 } from "./meshscene.js";
 
+import {
+    TextPartWidget
+} from "./textw.js";
 
 // ----------- scene globals ----------------------
 
@@ -27,6 +30,9 @@ function recreate_obj() {
     document.body.prepend(objtag);
 }
 var active_scene = null;
+
+
+var TextParts = new TextPartWidget();
 
 function scene_select() {
 
@@ -91,6 +97,21 @@ function scene_select() {
     }
 }
 
+
+function add_text_editable_event() {
+    let tparts_length = TextParts.text_parts.length;
+    if (tparts_length > 0) {
+        tparts_length--;
+    }
+    TextParts.add_text_editable_event(tparts_length);
+}
+
+
+function add_new_text_part() {
+    TextParts.new_text_part();
+    add_text_editable_event();
+}
+
 function add_listeners() {
     let buttons = document.getElementsByName("scene");
     let selected;
@@ -98,5 +119,8 @@ function add_listeners() {
         let btn = buttons[i];
         btn.addEventListener("change", scene_select);
     }
+    let tpartbtn = document.getElementById("add-text-part");
+    tpartbtn.addEventListener("click", add_new_text_part);
 }
+
 add_listeners();
