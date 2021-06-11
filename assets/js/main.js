@@ -53,6 +53,7 @@ function scene_select() {
         active_scene = new CubeScene(
             "render-zone",
         );
+        active_scene.text_w = TextParts;
         active_scene.init();
         active_scene.render_scene();
     } else if (selected === "demotic-mesh") {
@@ -66,6 +67,7 @@ function scene_select() {
             // "./assets/obj/Houghton_MS_Ostraca_3150/Houghton_MS_Ostraca_3150.obj"
             "./assets/obj/houghton_ms_ostraca_3150/scene.gltf"
         );
+        active_scene.text_w = TextParts;
         active_scene.init();
         // active_scene.render_scene();
     } else if (selected === "rosetta-mesh") {
@@ -79,6 +81,7 @@ function scene_select() {
             // "./assets/obj/Houghton_MS_Ostraca_3150/Houghton_MS_Ostraca_3150.obj"
             "./assets/obj/rosetta_stone/scene.gltf"
         );
+        active_scene.text_w = TextParts;
         active_scene.init();
         // active_scene.render_scene();
     } else if (selected === "osiris-mesh") {
@@ -92,6 +95,7 @@ function scene_select() {
             // "./assets/obj/Houghton_MS_Ostraca_3150/Houghton_MS_Ostraca_3150.obj"
             "./assets/obj/osiris_chapel_temple_of_seti_i_abydos/scene.gltf"
         );
+        active_scene.text_w = TextParts;
         active_scene.init();
         // active_scene.render_scene();
     }

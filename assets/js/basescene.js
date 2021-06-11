@@ -9,6 +9,20 @@ import {
     GUI
 } from "./external.js";
 
+// basic utilities
+
+
+/**
+from SO: https://stackoverflow.com/a/5191133/7330813
+by: Andrew Marshall
+ * @param num The number to round
+ * @param precision The number of decimal places to preserve
+ */
+function roundUp(num, precision) {
+    precision = Math.pow(10, precision)
+    return Math.ceil(num * precision) / precision
+}
+
 import {
     CameraWidget
 } from "./widget.js";
@@ -57,13 +71,22 @@ class BaseScene {
         // gui elements
         this._gui = null;
 
-        this._text_parts = null;
+        this._text_w = null;
     }
     check_null(obj, message) {
         if (obj === null) {
             throw message;
         }
         return obj;
+    }
+    get text_w() {
+        if (this._text_w === null) {
+            throw "text widget is none";
+        }
+        return this._text_w;
+    }
+    set text_w(s) {
+        this._text_w = s;
     }
     get render_zone() {
         return this.check_null(this._render_zone, "render zone is null");
@@ -232,5 +255,6 @@ class BaseScene {
     }
 }
 export {
-    BaseScene
+    BaseScene,
+    roundUp
 };

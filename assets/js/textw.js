@@ -149,13 +149,13 @@ class TextPartView {
         plight_dir.id = "light-direction-info-" + this.model.index;
         // xval
         let xval = document.createElement("span");
-        xval.textNode = this.model.light_info["direction"].x;
+        xval.textNode = "x: " + this.model.light_info["direction"].x;
         xval.id = "x-light-direction-" + this.model.index;
         let yval = document.createElement("span");
         yval.id = "y-light-direction-" + this.model.index;
-        yval.textNode = this.model.light_info["direction"].y;
+        yval.textNode = " y: " + this.model.light_info["direction"].y;
         let zval = document.createElement("span");
-        zval.textNode = this.model.light_info["direction"].z;
+        zval.textNode = " z: " + this.model.light_info["direction"].z;
         zval.id = "z-light-direction-" + this.model.index;
         plight_dir.appendChild(document.createTextNode("Light Direction: "));
         plight_dir.appendChild(xval);
@@ -168,13 +168,13 @@ class TextPartView {
         plight_color.id = "light-color-info-" + this.model.index;
         // xval
         let xvalc = document.createElement("span");
-        xvalc.textNode = this.model.light_info["color"].r;
+        xvalc.textNode = "r: " + this.model.light_info["color"].r;
         xvalc.id = "r-light-color-" + this.model.index;
         let yvalc = document.createElement("span");
-        yvalc.textNode = this.model.light_info["color"].g;
+        yvalc.textNode = " g: " + this.model.light_info["color"].g;
         yvalc.id = "g-light-color-" + this.model.index;
         let zvalc = document.createElement("span");
-        zvalc.textNode = this.model.light_info["color"].b;
+        zvalc.textNode = " b: " + this.model.light_info["color"].b;
         zvalc.id = "b-light-color-" + this.model.index;
         plight_color.appendChild(document.createTextNode("Light Color: "));
         plight_color.appendChild(xvalc);
@@ -251,31 +251,42 @@ class TextPartControl {
     to_html() {
         return this.view.to_html();
     }
+
+    change_light_info(x, y, z, vs, is_dir) {
+        if (this.model.is_editable) {
+            let vals = []
+            let middle;
+            if (is_dir) {
+                middle = "direction";
+            } else {
+                middle = "color";
+            }
+            for (const key in vs) {
+                vals.push({
+                    k: key,
+                    v: vs[key],
+                    id: key + "-light-" + middle + "-" + this.model.index
+                });
+            }
+            for (const key in vals) {
+                let id = vals[key].id;
+                let val = vals[key].v;
+                let t = document.getElementById(id);
+                if (t.firstChild) {
+                    t.removeChild(t.firstChild);
+                }
+                let txt = " " + vals[key].k + ": " + val;
+                t.appendChild(document.createTextNode(txt));
+            }
+        }
+    }
     change_light_direction(x, y, z) {
         let vs = {
             x: x,
             y: y,
             z: z
         };
-        this.change_light_info(x, y, z, vs);
-    }
-    change_light_info(x, y, z, vs) {
-        if (this.model.is_editable) {
-            let vals = []
-            for (const key in vs) {
-                vals.push({
-                    k: key + "-light-direction-" + this.model.index,
-                    v: vs[key]
-                });
-            }
-            for (const key in vals) {
-                let id = vals[key].k;
-                let val = vals[key].v;
-                let t = document.getElementById(id);
-                t.removeChild(t.firstChild);
-                t.appendChild(document.createTextNode(val));
-            }
-        }
+        this.change_light_info(x, y, z, vs, true);
     }
     change_light_color(x, y, z) {
         let vs = {
@@ -283,7 +294,7 @@ class TextPartControl {
             g: y,
             b: z
         };
-        this.change_light_info(x, y, z, vs);
+        this.change_light_info(x, y, z, vs, false);
     }
     change_text(txt) {
         if (this.model.is_editable) {
@@ -383,13 +394,22 @@ class TextPartWidget {
         let parts = [];
         for (const k in this.text_parts) {
             if (this.text_parts[k].model.is_editable) {
-                parts.push({
-                    key: k,
-                    part: this.text_parts[k]
-                });
+                parts.push(k);
             }
         }
         return parts;
+    }
+    change_light_direction(x, y, z) {
+        let eds = this.get_editables();
+        for (var i = 0; i < eds.length; i++) {
+            this.text_parts[eds[i]].change_light_direction(x, y, z);
+        }
+    }
+    change_light_color(x, y, z) {
+        let eds = this.get_editables();
+        for (var i = 0; i < eds.length; i++) {
+            this.text_parts[eds[i]].change_light_color(x, y, z);
+        }
     }
     to_html() {
         let ul = document.getElementById(this.id);

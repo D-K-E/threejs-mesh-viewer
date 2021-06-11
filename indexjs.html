@@ -4,24 +4,73 @@
 <head>
     <meta charset="utf-8" />
     <title>My Index Page</title>
+    <style type="text/css">
+        article#main-widget {
+            display: flex;
+        }
+
+        section#render-area {
+            flex: 60%
+        }
+
+        section#text-area {
+            flex: 20%
+        }
+    </style>
 </head>
 
 <body>
-    <object id="render-zone" width="800" height="600"></object>
-    <div id="scene-select-group">
-        <input type="radio" id="cube-scene" name="scene" value="cube">
-        <label for="cube-scene">Cube Scene</label><br>
-        <input type="radio" id="demotic-mesh-scene" name="scene" value="demotic-mesh">
-        <label for="demotic-mesh-scene">Demotic Mesh Scene</label><br>
+    <article id="main-widget">
+        <section class="col" id="render-area">
+            <object id="render-zone" width="800" height="600"></object>
 
-        <input type="radio" id="rosetta-mesh-scene" name="scene" value="rosetta-mesh">
-        <label for="rosetta-mesh-scene">Rosetta Mesh Scene</label><br>
+            <div id="scene-select-group">
+                <input type="radio" id="cube-scene" name="scene" value="cube">
+                <label for="cube-scene">Cube Scene</label><br>
+                <input type="radio" id="demotic-mesh-scene" name="scene" value="demotic-mesh">
+                <label for="demotic-mesh-scene">Demotic Mesh Scene</label><br>
 
-        <input type="radio" id="osiris-mesh-scene" name="scene" value="osiris-mesh">
-        <label for="osiris-mesh-scene">Osiris Mesh Scene</label><br>
+                <input type="radio" id="rosetta-mesh-scene" name="scene" value="rosetta-mesh">
+                <label for="rosetta-mesh-scene">Rosetta Mesh Scene</label><br>
+
+                <input type="radio" id="osiris-mesh-scene" name="scene" value="osiris-mesh">
+                <label for="osiris-mesh-scene">Osiris Mesh Scene</label><br>
 
 
-    </div>
+            </div>
+        </section>
+
+        <section class="col" id="text-area">
+            <div id="text-container">
+                <button id="add-text-part">Add Text Part</button>
+                <ul id="text-parts">
+                    <li class="text-part-container" id="text-part-container-0">
+                        <div id="text-part-switch-0">
+                            <input type="radio" id="text-part-radio-0-editable" name="text-part-radio" value="editable">
+                            <label for="text-part-radio-0-editable">Editable</label><br>
+                            <input type="radio" id="text-part-radio-0-not-editable" name="text-part-radio" value="not-editable">
+                            <label for="text-part-radio-0-not-editable" checked>Not Editable</label><br>
+                        </div>
+                        <div id="text-light-info-0">
+                            <p id="light-direction-info-0">
+                                Light Direction:
+                                <span id="x-light-direction-0">x</span>
+                                <span id="y-light-direction-0">y</span>
+                                <span id="z-light-direction-0">z</span>
+                            </p>
+                            <p id="light-color-info-0">
+                                Light Color:
+                                <span class="r-light-color-0">r</span>
+                                <span class="g-light-color-0">g</span>
+                                <span class="b-light-color-0">b</span>
+                            </p>
+                        </div>
+                        <textarea id="text-part-0" readonly></textarea>
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </article>
 
     <script type="module" src="./assets/js/main.js">
     </script>

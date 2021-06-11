@@ -14,7 +14,8 @@ import {
 } from "./widget.js";
 
 import {
-    BaseScene
+    BaseScene,
+    roundUp
 } from "./basescene.js";
 
 class CubeScene extends BaseScene {
@@ -165,13 +166,13 @@ class CubeScene extends BaseScene {
             ks: 0.2,
             metallic: true,
 
-            hue: 0.121,
-            saturation: 0.73,
-            lightness: 0.66,
+            r: 0.121,
+            g: 0.73,
+            b: 0.66,
 
-            lhue: 0.04,
-            lsaturation: 0.01, // non-zero so that fractions will be shown
-            llightness: 1.0,
+            lr: 0.04,
+            lg: 0.01, // non-zero so that fractions will be shown
+            lb: 1.0,
 
             // bizarrely, if you initialize these with negative numbers, the sliders
             // will not show any decimal places.
@@ -247,8 +248,8 @@ class CubeScene extends BaseScene {
 
         // texturedMaterial.shininess = this.effect_controller.shininess;
 
-        this.diffuse_color.setHSL(this.effect_controller.hue,
-            this.effect_controller.saturation, this.effect_controller.lightness);
+        this.diffuse_color.setRGB(this.effect_controller.r,
+            this.effect_controller.g, this.effect_controller.b);
         if (this.effect_controller.metallic) {
 
             // make colors match to give a more metallic look
@@ -270,15 +271,30 @@ class CubeScene extends BaseScene {
         // texturedMaterial.specular.copy(specularColor);
 
         // Ambient's actually controlled by the light for this demo
-        this.ambient_light.color.setHSL(this.effect_controller.hue,
-            this.effect_controller.saturation,
-            this.effect_controller.lightness * this.effect_controller.ka);
+        this.ambient_light.color.setRGB(this.effect_controller.r,
+            this.effect_controller.g,
+            this.effect_controller.b * this.effect_controller.ka);
 
+        let lx, ly, lz, lr, lg, lb;
+        lx = this.effect_controller.lx;
+        ly = this.effect_controller.ly;
+        lz = this.effect_controller.lz;
+        lr = this.effect_controller.lr;
+        lg = this.effect_controller.lg;
+        lb = this.effect_controller.lb;
 
-        this.light.position.set(this.effect_controller.lx,
-            this.effect_controller.ly, this.effect_controller.lz);
-        this.light.color.setHSL(this.effect_controller.lhue,
-            this.effect_controller.lsaturation, this.effect_controller.llightness);
+        this.light.position.set(lx, ly, lz);
+        this.light.color.setRGB(lr, lg, lb);
+
+        this.text_w.change_light_direction(
+            roundUp(lx, 3),
+            roundUp(ly, 3),
+            roundUp(lz, 3)
+        );
+        this.text_w.change_light_color(
+            roundUp(lr, 3), roundUp(lg, 3), roundUp(lb, 3)
+        );
+
 
         // skybox is rendered separately, so that it is always behind the teapot.
         if (this.shading === "reflective") {
@@ -315,23 +331,23 @@ class CubeScene extends BaseScene {
     set_material_color_menu(container) {
         container = this.gui.addFolder("Material color");
 
-        container.add(this.effect_controller, "hue", 0.0, 1.0,
-            0.025).name("hue").onChange(this.render_scene);
-        container.add(this.effect_controller, "saturation", 0.0, 1.0,
-            0.025).name("saturation").onChange(this.render_scene);
-        container.add(this.effect_controller, "lightness", 0.0, 1.0,
-            0.025).name("lightness").onChange(this.render_scene);
+        container.add(this.effect_controller, "r", 0.0, 1.0,
+            0.025).name("r").onChange(this.render_scene);
+        container.add(this.effect_controller, "g", 0.0, 1.0,
+            0.025).name("g").onChange(this.render_scene);
+        container.add(this.effect_controller, "b", 0.0, 1.0,
+            0.025).name("b").onChange(this.render_scene);
     }
 
     set_light_menu(container) {
         container = this.gui.addFolder("Lighting");
 
-        container.add(this.effect_controller, "lhue", 0.0, 1.0,
-            0.025).name("hue").onChange(this.render_scene);
-        container.add(this.effect_controller, "lsaturation", 0.0, 1.0,
-            0.025).name("saturation").onChange(this.render_scene);
-        container.add(this.effect_controller, "llightness", 0.0, 1.0,
-            0.025).name("lightness").onChange(this.render_scene);
+        container.add(this.effect_controller, "lr", 0.0, 1.0,
+            0.025).name("r").onChange(this.render_scene);
+        container.add(this.effect_controller, "lg", 0.0, 1.0,
+            0.025).name("g").onChange(this.render_scene);
+        container.add(this.effect_controller, "lb", 0.0, 1.0,
+            0.025).name("b").onChange(this.render_scene);
         container.add(this.effect_controller, "ka", 0.0, 1.0,
             0.025).name("ambient").onChange(this.render_scene);
 
